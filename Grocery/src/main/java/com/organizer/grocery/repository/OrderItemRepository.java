@@ -10,6 +10,7 @@ import java.util.List;
 
 @Repository
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
-    @Query("SELECT oi FROM OrderItem oi JOIN FETCH oi.product WHERE oi.order.id = :orderId")
-    List<OrderItem> findByOrderIdWithProduct(@Param("orderId") Long orderId);
+    @Query("SELECT oi FROM OrderItem oi WHERE oi.order.id = :orderId AND oi.productName = :productName")
+    List<OrderItem> findByOrderIdAndProductName(@Param("orderId") Long orderId, @Param("productName") String productName);
+    List<OrderItem> findByOrderId(Long orderId);
 }

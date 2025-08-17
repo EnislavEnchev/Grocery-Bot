@@ -34,4 +34,11 @@ public class Product {
             @AttributeOverride(name = "y", column = @Column(name = "location_y", nullable = false))
     })
     private Coordinate location;
+
+    public Product(String name, int quantity, Coordinate location) {
+        this.name = name;
+        this.price = new BigDecimal("0.00");
+        this.quantity = quantity;
+        this.location = location;
+    }
 }

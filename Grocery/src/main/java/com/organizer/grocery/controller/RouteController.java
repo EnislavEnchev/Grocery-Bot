@@ -8,9 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * REST Controller for retrieving calculated picking routes.
- */
 @RestController
 @RequestMapping("/routes")
 public class RouteController {

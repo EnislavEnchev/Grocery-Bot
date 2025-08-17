@@ -3,6 +3,8 @@ package com.organizer.grocery.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +14,7 @@ import java.util.Optional;
 @Table(name = "orders")
 @Data
 @NoArgsConstructor
-public class Order {
+public class Order implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,6 +23,9 @@ public class Order {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private OrderStatus status;
+
+    @Column(name = "error_message", nullable = true)
+    private String message;
 
     @Column(name = "order_timestamp", nullable = false, updatable = false)
     private LocalDateTime orderTimestamp;
@@ -31,7 +36,6 @@ public class Order {
     @PrePersist
     protected void onCreate() {
         orderTimestamp = LocalDateTime.now();
-        status = OrderStatus.PENDING;
     }
 
     public void addItem(OrderItem item) {

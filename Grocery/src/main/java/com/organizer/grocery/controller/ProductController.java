@@ -19,8 +19,9 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductDto> createProduct(@RequestBody ProductDto productDto) {
-        ProductDto createdProduct = productService.createProduct(productDto);
+    public ResponseEntity<ProductDto> createProduct(@RequestBody ProductDto productDto,
+                                                    @RequestHeader(value = "X-Notify", required = false) String notify) throws Exception {
+        ProductDto createdProduct = productService.createProduct(productDto, notify == null);
         return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
     }
 
@@ -42,14 +43,15 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductDto> updateProduct(@PathVariable Long id, @RequestBody ProductDto productDto) {
+    public ResponseEntity<ProductDto> updateProduct(@PathVariable Long id, @RequestBody ProductDto productDto) throws Exception {
         ProductDto updatedProduct = productService.updateProduct(id, productDto);
         return ResponseEntity.ok(updatedProduct);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
-        productService.deleteProduct(id);
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id,
+                                              @RequestHeader(value = "X-Notify", required = false) String notify) throws Exception {
+        productService.deleteProduct(id, notify == null);
         return ResponseEntity.noContent().build();
     }
 }

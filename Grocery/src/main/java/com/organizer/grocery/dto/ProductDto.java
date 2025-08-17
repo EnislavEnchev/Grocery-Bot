@@ -1,6 +1,8 @@
 package com.organizer.grocery.dto;
 
 import com.organizer.grocery.model.Coordinate;
+
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 public record ProductDto(
@@ -9,4 +11,4 @@ public record ProductDto(
         BigDecimal price,
         int quantity,
         Coordinate location
-) {}
+) implements Serializable {}

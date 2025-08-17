@@ -1,6 +1,7 @@
 package com.organizer.grocery.algo;
 
 import com.organizer.grocery.model.Coordinate;
+
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.cycle.HierholzerEulerianCycle;
@@ -13,29 +14,27 @@ import org.jgrapht.graph.Pseudograph;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import org.jgrapht.graph.AsSubgraph;
 
-import java.util.*;
+import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-public class Christofides{
-
-    public static int manhattanDistance(Coordinate p1, Coordinate p2) {
-        return Math.abs(p1.x() - p2.x()) + Math.abs(p1.y() - p2.y());
-    }
-
+public class Christofides {
     public static List<Coordinate> calculateOrderRoute(List<Coordinate> locations) {
+        System.out.println("Locations to visit before processing: " + locations);
         if (locations.size() < 3) {
             List<Coordinate> tour = new ArrayList<>(locations);
-            tour.add(locations.get(0));
+            tour.add(0, new Coordinate(0, 0));
             return tour;
         }
+
         Graph<Coordinate, DefaultWeightedEdge> completeGraph = createCompleteGraph(locations);
 
         SpanningTreeAlgorithm<DefaultWeightedEdge> mstAlgorithm = new KruskalMinimumSpanningTree<>(completeGraph);
-        SpanningTreeAlgorithm.SpanningTree<DefaultWeightedEdge> mst = mstAlgorithm.getSpanningTree();
-
-        Graph<Coordinate, DefaultWeightedEdge> mstGraph = new AsSubgraph<>(completeGraph, null, mst.getEdges());
+        Set<DefaultWeightedEdge> mstEdges = mstAlgorithm.getSpanningTree().getEdges();
+        Graph<Coordinate, DefaultWeightedEdge> mstGraph = new AsSubgraph<>(completeGraph, null, mstEdges);
         Set<Coordinate> oddDegreeVertices = mstGraph.vertexSet().stream()
-                .filter(v -> mstGraph.degreeOf(v) % 2!= 0)
+                .filter(v -> mstGraph.degreeOf(v) % 2 != 0)
                 .collect(Collectors.toSet());
 
         Graph<Coordinate, DefaultWeightedEdge> oddSubgraph = new AsSubgraph<>(completeGraph, oddDegreeVertices);
@@ -43,26 +42,43 @@ public class Christofides{
         MatchingAlgorithm.Matching<Coordinate, DefaultWeightedEdge> perfectMatching = matchingAlgorithm.getMatching();
 
         Graph<Coordinate, DefaultWeightedEdge> multigraph = new Pseudograph<>(DefaultWeightedEdge.class);
-        locations.forEach(multigraph::addVertex);
-        mst.getEdges().forEach(edge -> multigraph.addEdge(
-                completeGraph.getEdgeSource(edge), completeGraph.getEdgeTarget(edge), edge
-        ));
-        perfectMatching.getEdges().forEach(edge -> multigraph.addEdge(
-                completeGraph.getEdgeSource(edge), completeGraph.getEdgeTarget(edge), edge
-        ));
+        for (Coordinate coord : locations) {
+            multigraph.addVertex(coord);
+        }
+
+        System.out.println("Adding MST edges to multigraph...");
+        for (DefaultWeightedEdge edge : mstEdges) {
+            System.out.println("Adding mst edge: " + edge);
+            Coordinate v1 = completeGraph.getEdgeSource(edge);
+            Coordinate v2 = completeGraph.getEdgeTarget(edge);
+            multigraph.addEdge(v1, v2);
+        }
+
+        for (DefaultWeightedEdge edge : perfectMatching.getEdges()) {
+            System.out.println("Adding matching edge: " + edge);
+            Coordinate v1 = completeGraph.getEdgeSource(edge);
+            Coordinate v2 = completeGraph.getEdgeTarget(edge);
+            multigraph.addEdge(v1, v2);
+        }
 
         HierholzerEulerianCycle<Coordinate, DefaultWeightedEdge> eulerianCycleAlgorithm = new HierholzerEulerianCycle<>();
         GraphPath<Coordinate, DefaultWeightedEdge> eulerianCircuit = eulerianCycleAlgorithm.getEulerianCycle(multigraph);
+        System.out.println("Successful cycle found!");
+        for (Coordinate coord : multigraph.vertexSet()) {
+            System.out.println("Vertex: " + coord + ", Degree: " + multigraph.degreeOf(coord));
+        }
 
         List<Coordinate> tour = new ArrayList<>();
-        Set<Coordinate> visited = new HashSet<>();
-        for (Coordinate v : eulerianCircuit.getVertexList()) {
-            if (!visited.contains(v)) {
-                tour.add(v);
-                visited.add(v);
+        for (int i = 0; i < eulerianCircuit.getVertexList().size(); i++) {
+            if (!tour.contains(eulerianCircuit.getVertexList().get(i))) {
+                tour.add(eulerianCircuit.getVertexList().get(i));
             }
         }
-        tour.add(tour.get(0));
+
+        if (tour.size() >= 2 && !tour.get(0).equals(tour.get(tour.size() - 1))) {
+            tour.add(tour.get(0));
+        }
+        System.out.println("Tour: " + tour);
         return tour;
     }
 
@@ -70,11 +86,11 @@ public class Christofides{
         Graph<Coordinate, DefaultWeightedEdge> g = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
         locations.forEach(g::addVertex);
         for (int i = 0; i < locations.size(); i++) {
+            Coordinate p1 = locations.get(i);
             for (int j = i + 1; j < locations.size(); j++) {
-                Coordinate p1 = locations.get(i);
                 Coordinate p2 = locations.get(j);
                 DefaultWeightedEdge edge = g.addEdge(p1, p2);
-                g.setEdgeWeight(edge, manhattanDistance(p1, p2));
+                g.setEdgeWeight(edge, HelperFunctions.calculateDistance(p1, p2));
             }
         }
         return g;
